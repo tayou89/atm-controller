@@ -1,4 +1,4 @@
-import CARD_LIST from './card-list.js'; 
+import { CARD_LIST } from './card-list.js'; 
 import { ATMController } from '../atm-controller.js';
 import { Bank } from './bank.js';
 import { CashBin } from './cash-bin.js';

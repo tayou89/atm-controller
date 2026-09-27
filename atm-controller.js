@@ -21,18 +21,18 @@ export class ATMController {
     insertCard = (card) => {
         this.checkStatus(STATUS.IDLE);
         this.status = STATUS.CARD_INSERTED;
-        this.card = card;   
+        this.card = structuredClone(card);   
     }
 
     enterPin = async (pin) => {
         this.checkStatus(STATUS.CARD_INSERTED);
-        await this.bank.veryfyPin(this.card, pin);
+        await this.bank.veryfyPin(this.card.number, pin);
         this.status = STATUS.PIN_ENTERED;
     }
 
     loadAccount = async () => {
         this.checkStatus(STATUS.PIN_ENTERED);
-        this.card.accountList = await this.bank.getAccountList(this.card);
+        this.card.accountList = await this.bank.getAccountList(this.card.number);
         this.status = STATUS.ACCOUNT_LOADED;
         return this.card.accountList;
     }
@@ -50,9 +50,7 @@ export class ATMController {
     }
 
     findAccount = (accountNumber) => {
-        this.checkStatus(STATUS.ACCOUNT_SELECTED);
-        this.checkAccountNumber(accountNumber);
-        return this.card.accountList.find(account => account.accountNumber === accountNumber);
+        return this.card.accountList.find(account => account.number === accountNumber);
     }
 
     deposit = async (amount) => {
@@ -60,6 +58,7 @@ export class ATMController {
         await this.cashBin.acceptCash(amount);
         this.status = STATUS.TRANSACTION_IN_PROGRESS;
         await this.bank.deposit(this.card.selectedAccount.number, amount);
+        await this.renewBalance();
         this.status = STATUS.ACCOUNT_SELECTED;
     }
 
@@ -68,6 +67,7 @@ export class ATMController {
         this.status = STATUS.TRANSACTION_IN_PROGRESS;
         await this.bank.withdraw(this.card.selectedAccount.number, amount);
         await this.cashBin.dispenseCash(amount);
+        await this.renewBalance();
         this.status = STATUS.ACCOUNT_SELECTED;
     }
 
@@ -77,12 +77,20 @@ export class ATMController {
         this.card = {};
     }
 
+    renewBalance = async () => {
+        this.checkStatus(STATUS.ACCOUNT_LOADED);
+
+        for (const account of this.card.accountList) {
+            account.balance = await this.bank.getBalance(account.number);
+        }
+    }
+
     checkAccountNumber = (accountNumber) => {
         if (!this.card.accountList) {
             throw new Error('Account list not loaded. Please load account list first.');
         }
         for (const account of this.card.accountList) {
-            if (account.accountNumber === accountNumber) {
+            if (account.number === accountNumber) {
                 return true;
             }
         }
@@ -91,10 +99,10 @@ export class ATMController {
 
     checkStatus = (status) => {
         const currentStatus = this.getStatusName(this.status);
-        const expectedStatus = this.getStatusName(this.status);
+        const expectedStatus = this.getStatusName(status);
 
         if (this.status < status) {
-            throw new Error(`Invalid Status. Current State: ${currentStatus}. Expected State: ${expectedStatus}.`);
+            throw new Error(`Invalid Status. Current Status: ${currentStatus}. Expected Status: ${expectedStatus}.`);
         }
     }
 

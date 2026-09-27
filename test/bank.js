@@ -1,21 +1,21 @@
 export class Bank {
     constructor(cardList) {
-        this.cardList = cardList;
+        this.cardList = structuredClone(cardList);
     }
 
-    getAccountList = async (card) => {
-        const card = this.findCard(card.cardNumber);
+    getAccountList = async (cardNumber) => {
+        const card = this.findCard(cardNumber);
 
         this.sleep(1000);
-        return card.accountList;
+        return structuredClone(card.accountList);
     }
 
-    veryfyPin = async (card, pin) => {
-        const card = this.findCard(card.cardNumber);
+    veryfyPin = async (cardNumber, pin) => {
+        const card = this.findCard(cardNumber);
 
         this.sleep(1000);
         if (card.pin !== pin) {
-            throw new Error(`Invalid PIN for card ${card.cardNumber}`);
+            throw new Error(`Invalid PIN for card ${card.number}`);
         }
     }
 
@@ -46,7 +46,7 @@ export class Bank {
     }
 
     findCard = (cardNumber) => {
-        const card = this.cardList.find(card => card.cardNumber === cardNumber);
+        const card = this.cardList.find(card => card.number === cardNumber);
 
         if (!card) {
             throw new Error(`Card ${cardNumber} not found`);
@@ -57,7 +57,7 @@ export class Bank {
     findAccount = (accountNumber) => {
         for (const card of this.cardList) {
             for (const account of card.accountList) {
-                if (account.accountNumber === accountNumber) {
+                if (account.number === accountNumber) {
                     return account;
                 }
             }
