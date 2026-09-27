@@ -1,0 +1,13 @@
+{
+  "name": "atm-controller",
+  "version": "1.0.0",
+  "description": "ATM controller with mocking bank and cashbin",
+  "type": "module",
+  "main": "atm-controller.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2"
+  }
+}
